@@ -166,6 +166,11 @@
         margin-top: 10px;
         flex-wrap: nowrap;
       }
+/*
+      #testingElements {
+         display: none; 
+      }
+         */
     </style>
   </head>
 
@@ -206,7 +211,7 @@
         <button class="export" onclick="submitChecks()">Submit Logs</button>
         <button
           class="exportdocument"
-          onclick="window.open('https://docs.google.com/spreadsheets/d/1f84Gosr3AqZj2jr9wFL2RNvCu-utzYybUUUbXWuu6kY/edit?usp=sharing', '_blank');"
+          onclick="window.open('https://docs.google.com/spreadsheets/d/1f84Gosr3AqZj2jr9wFL2RNvCu-utzYybUUUbXWuu6kY/edit?usp=sharing', '_blank', 'noopener,noreferrer');"
         >
           Signal Log Document
         </button>
@@ -214,12 +219,14 @@
           Report Error
         </button>
 
-        <!-- 
+      
+        <span id="testingElements">
         <button class="testingButton" onclick="updateTestTime()">
-          TestTimeleft
+          Test Time left
         </button>
         <textarea id="testtime" placeholder="3">.03</textarea>
--->
+      </span>
+        
       </div>
 
       <hr />
@@ -228,6 +235,23 @@
     </div>
 
     <script>
+
+  document.getElementById("testingElements").style.display = "none";
+  
+
+
+let testing = false;
+
+function showTestElements () {
+  document.getElementById("testingElements").style.display = "";
+    console.log(document.getElementById("testingElements").style.display);
+
+}
+
+if (testing) {
+  showTestElements ();
+}
+      
       // =====================
       // CONFIG
       // =====================
@@ -328,6 +352,12 @@
             warningBoxEl.textContent = "⚠ SIGNAL CHECK OVERDUE ⚠";
             warningBoxEl.classList.add("show");
             console.log("warningbox on");
+     // optional beep
+      new Audio(
+         "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        ).play();
+
+
           } else {
             countdownEl.textContent = "✔ Interval completed";
             countdownEl.classList.remove("alert");
@@ -611,10 +641,7 @@ ${sub}
       initializeCountdown();
       setInterval(updateCountdown, 1000);
 
-      //optional beep
-      //new Audio(
-      //   "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-      //  ).play();
+
     </script>
   </body>
 </html>
