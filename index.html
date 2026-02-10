@@ -55,6 +55,10 @@
         margin-top: 10px;
       }
 
+      .redNotesBox {
+        border: 4px solid red;
+      }
+
       #statusMsg {
         margin-top: 15px;
         font-style: italic;
@@ -337,9 +341,9 @@
           initializeCountdown();
           return;
         }
-        console.log("4remainig seconds", remainingSeconds);
-        console.log("4TcheckedForInterval ", checkedForInterval);
-        console.log("4TsignalCheckMissed", signalCheckMissed);
+        // console.log("4remainig seconds", remainingSeconds);
+        //  console.log("4TcheckedForInterval ", checkedForInterval);
+        //  console.log("4TsignalCheckMissed", signalCheckMissed);
 
         remainingSeconds--;
       }
@@ -398,7 +402,7 @@
         logs.push(entry);
         localStorage.setItem("signalLogs", JSON.stringify(logs));
 
-        sendToSheets(entry);
+        sendToSheets(entry, "Log");
         console.log(entry);
 
         clearAllChecks();
@@ -445,7 +449,12 @@
           }
         });
 
-        document.getElementById("notes").value = "";
+        const notesBox = document.getElementById("notes");
+        notesBox.classList.remove("redNotesBox");
+        notesBox.value = "";
+        notesBox.placeholder = "Optional Notes "
+
+
       }
 
       const signalList = [
@@ -530,34 +539,49 @@ ${sub}
           return;
         }
 
+        const userNotes = document.getElementById("notes").value;
+        const notesBox = document.getElementById("notes");
+        console.log("userNotes");
+
+        if (!userNotes) {
+          //alert("Please add notes.");
+          notesBox.placeholder = "-- Por favor escriba cual es el error --"
+          notesBox.classList.add("redNotesBox");
+          return;
+        }
+
         const now = new Date();
         const entry = {
           date: now.toLocaleDateString(),
           time: now.toLocaleTimeString(),
           operator: operator,
-          notes: "Error note: " + document.getElementById("notes").value,
+          notes: "Error note: " + userNotes,
         };
 
         logs.push(entry);
         localStorage.setItem("signalLogs", JSON.stringify(logs));
 
-        sendToSheets(entry);
+        sendToSheets(entry, "Error");
         console.log(entry);
 
+        notesBox.classList.remove("redNotesBox");
         console.log("Report Sent");
-      }
 
-      document.getElementById("notes").value = "";
+        document.getElementById("notes").value = "";
+        notesBox.placeholder = "Optional Notes "
+
+
+      }
 
       // =========================
       // Google Sheets POST
       // Requires Apps Script endpoint
       // =========================
-      async function sendToSheets(entry) {
+      async function sendToSheets(entry, sentStatus = "Something") {
         const endpoint =
           "https://script.google.com/macros/s/AKfycbx1f3dIyJrWjQSU5RVFZz7ja7wFz0IxivrLzAD2YxJ-LRInoryp08zqIqVlikHujLl_VA/exec";
 
-        console.log("async function clicked");
+        console.log("async function activated");
         //counting = false;
 
         try {
@@ -570,7 +594,7 @@ ${sub}
           const sentAt = entry.timestamp
             ? new Date(entry.timestamp)
             : new Date();
-          status(`Log sent to Sheets at ${sentAt.toLocaleString()}`);
+          status(`${sentStatus} sent to Sheets at ${sentAt.toLocaleString()}`);
         } catch (e) {
           console.error(e);
           status("Sheets send failed.");
