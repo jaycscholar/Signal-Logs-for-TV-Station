@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>📺 Signal Check (Please Don't Let The Station Die)</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #eee;
+        text-align: center;
+        padding: 30px;
+    }
+
+    .card {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 900px;
+        margin: auto;
+        box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    button {
+        padding: 10px 20px;
+        margin: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .good { background: #28a745; color: white; }
+    .bad { background: #dc3545; color: white; }
+    .export { background: #007bff; color: white; }
+
+    textarea {
+        width: 90%;
+        height: 60px;
+        margin-top: 10px;
+    }
+
+    #statusMsg {
+        margin-top: 15px;
+        font-style: italic;
+        color: #aaa;
+    }
+
+.signal-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+}
+
+@media (max-width: 900px) {
+    .signal-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.signal-item {
+    background: #333;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+    transition: 0.2s;
+}
+
+.signal-item:has(input:checked) {
+    background: #1f6f3e;
+}
+
+.signal-item:hover {
+    background: #444;
+}
+
+.signal-item input {
+    margin-right: 8px;
+    transform: scale(1.2);
+}
+
+.reminder-box {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+.alert {
+    color: red;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.3; }
+}
+
+.all-btn {
+    background: #17a2b8;
+    color: white;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<div class="card">
+    <h1>📺 Signal Check</h1>
+
+<div class="reminder-box">
+    <span id="countdown">Next check in: 30:00</span>
+</div>
+    <p id="timeDisplay"></p>
+
+    <p>Is the signal alive and behaving?</p>
+
+<h3>Check Each Distribution Signal</h3>
+
+<button class="all-btn" onclick="checkAllSignals()">✅ Check All Signals</button>
+
+
+<div id="signals" class="signal-grid"></div>
+
+<textarea id="notes" placeholder="Optional notes (ex: satellite angry today)"></textarea>
+<p>
+<label for="operator">Operator:</label>
+<select id="operator">
+    <option value="">Ricardo A</option>
+    <option>Miguel </option>
+    <option>Benjamin</option>
+    <option>Jose Leo </option>
+    <option>Kevin U</option>
+    <option>David</option>
+    <option>Jay R</option>
+    <option>Other</option>
+</select>
+</p>
+
+<br>
+<button class="export" onclick="submitChecks()">Log Signal Check</button>
+
+
+
+
+    <hr/>
+
+   
+
+    <div id="statusMsg"></div>
+</div>
+
+<script>
+
+let logs = JSON.parse(localStorage.getItem("signalLogs") || "[]");
+
+function updateClock(){
+    document.getElementById("timeDisplay").innerText =
+        "Current Time: " + new Date().toLocaleString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+
+// =========================
+// 30 Minute Reminder
+// =========================
+setInterval(() => {
+    alert("⏰ Time to check the signal!\nThe viewers are counting on you.\n(Or at least someone's grandma is.)");
+}, 30 * 60 * 1000);
+
+
+// =========================
+// Logging
+// =========================
+function submitChecks(){
+
+    const operator = document.getElementById("operator").value;
+
+    if (!operator) {
+        alert("Please select operator.");
+        return;
+    }
+
+    const entry = {
+        timestamp: new Date().toISOString(),
+        operator: operator,
+        notes: document.getElementById("notes").value
+    };
+
+signalList.forEach(sigObj => {
+
+    const mainId = sigObj.name.replace(/\s/g,"_");
+
+    entry[sigObj.name] =
+        document.getElementById(mainId).checked;
+
+    if(sigObj.subChecks){
+        sigObj.subChecks.forEach(sub => {
+
+            const subId = `${mainId}_${sub.replace(/\s/g,"_")}`;
+
+            entry[`${sigObj.name} ${sub}`] =
+                document.getElementById(subId).checked;
+        });
+    }
+});
+
+    logs.push(entry);
+    localStorage.setItem("signalLogs", JSON.stringify(logs));
+
+    sendToSheets(entry);
+
+    remainingSeconds = checkIntervalMinutes * 60;
+    countdownEl.classList.remove("alert");
+}
+
+const signalList = [
+    { name: "RX SPECTRUM", subChecks: ["CC"] },
+    { name: "RX KDOC", subChecks: ["CC"] },
+    { name: "RX DIRECTV", subChecks: ["CC"] },
+    { name: "RX SAT" },
+    { name: "RX DISH NETWORK", subChecks: ["CC"] },
+    { name: "TX SPECTRUM" },
+    { name: "TX DIRECTV" },
+    { name: "TX DISH NETWORK" },
+    { name: "TX VEGAS PHOENIX" },
+    { name: "TX COMCAST" },
+    { name: "TX KDOC" },
+    { name: "TX SAT" },
+    { name: "TX PRIMARY STREA" },
+    { name: "TX BACK-UP STREA" },
+    { name: "TX WEB  APPS" },
+
+];
+
+function renderSignals(){
+
+    const container = document.getElementById("signals");
+    container.innerHTML = "";
+
+    signalList.forEach(sigObj => {
+
+        const mainId = sigObj.name.replace(/\s/g,"_");
+
+        let html = `
+            <div class="signal-item">
+                <label>
+                    <input type="checkbox" id="${mainId}">
+                    ${sigObj.name}
+                </label>
+        `;
+
+        // Add sub checks (like CC)
+        if(sigObj.subChecks){
+            sigObj.subChecks.forEach(sub => {
+
+                const subId = `${mainId}_${sub.replace(/\s/g,"_")}`;
+
+                html += `
+                    <div style="margin-left:20px; margin-top:5px;">
+                        <label>
+                            <input type="checkbox" id="${subId}">
+                            ${sub}
+                        </label>
+                    </div>
+                `;
+            });
+        }
+
+        html += `</div>`;
+
+        container.innerHTML += html;
+    });
+}
+
+
+
+renderSignals();
+
+
+function checkAllSignals(){
+
+    signalList.forEach(sigObj => {
+
+        const mainId = sigObj.name.replace(/\s/g,"_");
+        document.getElementById(mainId).checked = true;
+
+        if(sigObj.subChecks){
+            sigObj.subChecks.forEach(sub => {
+
+                const subId = `${mainId}_${sub.replace(/\s/g,"_")}`;
+                document.getElementById(subId).checked = true;
+            });
+        }
+
+    });
+}
+
+
+
+// =========================
+// Google Sheets POST
+// Requires Apps Script endpoint
+// =========================
+async function sendToSheets(entry){
+
+    const endpoint = "https://script.google.com/macros/s/AKfycbx1f3dIyJrWjQSU5RVFZz7ja7wFz0IxivrLzAD2YxJ-LRInoryp08zqIqVlikHujLl_VA/exec";
+
+    try{
+        await fetch(endpoint, {
+            method: "POST",
+            body: JSON.stringify(entry),
+            mode: "no-cors"
+        });
+
+        status("Log sent to Sheets.");
+    }
+    catch(e){
+        console.error(e);
+        status("Sheets send failed.");
+    }
+}
+
+
+function status(msg){
+    document.getElementById("statusMsg").innerText = msg;
+}
+
+let checkIntervalMinutes = 30; // change anytime
+let remainingSeconds = checkIntervalMinutes * 60;
+let countdownEl = document.getElementById("countdown");
+
+function updateCountdown() {
+
+    let minutes = Math.floor(remainingSeconds / 60);
+    let seconds = remainingSeconds % 60;
+
+    countdownEl.textContent =
+        `Next check in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    if (remainingSeconds <= 0) {
+
+        countdownEl.textContent = "⚠ SIGNAL CHECK TIME ⚠";
+        countdownEl.classList.add("alert");
+
+        // optional beep
+        new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play();
+
+        return;
+    }
+
+    remainingSeconds--;
+}
+
+setInterval(updateCountdown, 1000);
+
+
+</script>
+</body>
+</html>

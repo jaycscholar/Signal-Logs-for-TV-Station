@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>📺 Signal Check</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #eee;
+  text-align: center;
+  padding: 30px;
+}
+
+.card {
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.signal-item {
+  background: #333;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.signal-item:has(input:checked) {
+  background: #1f6f3e;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.all-btn { background: #17a2b8; color: white; }
+.export { background: #007bff; color: white; }
+
+.warning-box {
+  display: inline-block;
+  background: #dc3545;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  opacity: 0;
+}
+
+.warning-box.show {
+  opacity: 1;
+  animation: pulse 0.6s infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.4; }
+}
+
+.alert {
+  color: red;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>📺 Check Distribution Signals</h1>
+  <p id="clock"></p>
+
+  <div>
+    <span id="countdown">Next check in: ...</span>
+    <span id="warningBox" class="warning-box">⚠ SIGNAL CHECK MISSED ⚠</span>
+  </div>
+
+  <button class="all-btn" onclick="checkAllSignals()">✅ Check All</button>
+
+  <div id="signals" class="signal-grid"></div>
+
+  <p>
+    Operator:
+    <select id="operator">
+      <option></option>
+      <option>Jay R</option>
+      <option>David</option>
+      <option>Kevin</option>
+      <option>Other</option>
+    </select>
+  </p>
+
+  <button class="export" onclick="submitChecks()">Submit Logs</button>
+</div>
+
+<script>
+// =====================
+// CONFIG
+// =====================
+const checkIntervalMinutes = 30;
+
+// =====================
+// INTERVAL TRACKING
+// =====================
+function getIntervalId(date = new Date()) {
+  const day = date.toISOString().slice(0, 10); // YYYY-MM-DD
+  const hour = date.getHours();
+  const interval = Math.floor(date.getMinutes() / checkIntervalMinutes);
+  return `${day}-${hour}-${interval}`;
+}
+
+let lastCheckedIntervalId =
+  localStorage.getItem("lastCheckedIntervalId");
+
+// =====================
+// COUNTDOWN
+// =====================
+let remainingSeconds = 0;
+const countdownEl = document.getElementById("countdown");
+const warningBoxEl = document.getElementById("warningBox");
+
+function initializeCountdown() {
+  const now = new Date();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+
+  let nextIntervalMinute =
+    (Math.floor(minutes / checkIntervalMinutes) + 1) * checkIntervalMinutes;
+
+  if (nextIntervalMinute >= 60) nextIntervalMinute = 0;
+
+  let minutesUntil = nextIntervalMinute - minutes - 1;
+  let secondsUntil = 60 - seconds;
+
+  if (minutesUntil < 0) minutesUntil += 60;
+
+  remainingSeconds = minutesUntil * 60 + secondsUntil;
+}
+
+function updateCountdown() {
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  countdownEl.textContent =
+    `Next check in: ${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+  if (remainingSeconds <= 0) {
+    const currentIntervalId = getIntervalId();
+
+    if (lastCheckedIntervalId !== currentIntervalId) {
+      countdownEl.textContent = "⚠ SIGNAL CHECK MISSED ⚠";
+      countdownEl.classList.add("alert");
+      warningBoxEl.classList.add("show");
+    } else {
+      countdownEl.textContent = "✔ Interval completed";
+      countdownEl.classList.remove("alert");
+      warningBoxEl.classList.remove("show");
+    }
+
+    initializeCountdown();
+    return;
+  }
+
+  remainingSeconds--;
+}
+
+// =====================
+// CLOCK
+// =====================
+function updateClock() {
+  document.getElementById("clock").innerText =
+    "Current Time: " + new Date().toLocaleString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// =====================
+// SIGNAL LIST
+// =====================
+const signalList = [
+  { name: "RX SPECTRUM", subChecks: ["CC"] },
+  { name: "RX KDOC", subChecks: ["CC"] },
+  { name: "RX DIRECTV", subChecks: ["CC"] },
+  { name: "RX SAT" },
+  { name: "TX SPECTRUM" },
+  { name: "TX DIRECTV" }
+];
+
+function renderSignals() {
+  const container = document.getElementById("signals");
+  container.innerHTML = "";
+
+  signalList.forEach(sig => {
+    const id = sig.name.replace(/\s/g, "_");
+
+    let html = `
+      <div class="signal-item">
+        <label><input type="checkbox" id="${id}"> ${sig.name}</label>
+    `;
+
+    if (sig.subChecks) {
+      sig.subChecks.forEach(sub => {
+        html += `
+          <div style="margin-left:20px">
+            <label><input type="checkbox" id="${id}_${sub}"> ${sub}</label>
+          </div>`;
+      });
+    }
+
+    html += "</div>";
+    container.innerHTML += html;
+  });
+}
+
+renderSignals();
+
+// =====================
+// ACTIONS
+// =====================
+function checkAllSignals() {
+  document.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = true);
+}
+
+function submitChecks() {
+  const operator = document.getElementById("operator").value;
+  if (!operator) {
+    alert("Please select operator");
+    return;
+  }
+
+  const currentIntervalId = getIntervalId();
+  lastCheckedIntervalId = currentIntervalId;
+  localStorage.setItem("lastCheckedIntervalId", currentIntervalId);
+
+  countdownEl.classList.remove("alert");
+  warningBoxEl.classList.remove("show");
+
+  initializeCountdown();
+  alert("✅ Signal check logged");
+}
+
+// =====================
+initializeCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+</body>
+</html>

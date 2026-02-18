@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>📺 Signal Check</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #eee;
+        text-align: center;
+        padding: 30px;
+      }
+
+      .card {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 900px;
+        margin: auto;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      }
+
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .good {
+        background: #28a745;
+        color: white;
+      }
+      .bad {
+        background: #dc3545;
+        color: white;
+      }
+      .export {
+        background: #007bff;
+        color: white;
+      }
+
+      .exportdocument {
+        background: #333333;
+        color: white;
+      }
+
+      textarea {
+        width: 90%;
+        height: 60px;
+        margin-top: 10px;
+      }
+
+      .redNotesBox {
+        border: 4px solid red;
+      }
+
+      #statusMsg {
+        margin-top: 15px;
+        font-style: italic;
+        color: #aaa;
+      }
+
+      .signal-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+      }
+
+      @media (max-width: 900px) {
+        .signal-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .signal-item {
+        background: #333;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: left;
+        transition: 0.2s;
+      }
+
+      .signal-item:has(input:checked) {
+        background: #1f6f3e;
+      }
+
+      .signal-item:hover {
+        background: #444;
+      }
+
+      .signal-item input {
+        margin-right: 8px;
+        transform: scale(1.2);
+      }
+
+      .reminder-box {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+      .alert {
+        color: red;
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .all-btn {
+        background: #17a2b8;
+        color: white;
+      }
+
+      .warning-box {
+        display: inline-block;
+        background: #dc3545;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 18px;
+        margin-left: 20px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .warning-box.show {
+        animation: pulse 0.6s infinite;
+        opacity: 1;
+      }
+
+      .warning-box.yellow {
+        background: rgb(158, 156, 14);
+        animation: pulse 3s infinite;
+        opacity: 1;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .timeDisplay {
+        display: inline;
+      }
+
+      .inline-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        margin-top: 10px;
+        flex-wrap: nowrap;
+      }
+/*
+      #testingElements {
+         display: none; 
+      }
+         */
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h1>📺 Check Distribution Signals</h1>
+      <p>Is the signal alive and behaving? <span id="timeDisplay"></span></p>
+      <div class="reminder-box">
+        <span id="lastCheckBox">Last Check, </span>
+        <span id="countdown">Next check in ..:..</span>
+        <span id="warningBox" class="warning-box">⚠ SIGNAL CHECK NOW ⚠</span>
+      </div>
+
+      <p>
+        <button class="all-btn" onclick="checkAllSignals()">
+          ✅ Check All Signals
+        </button>
+      </p>
+
+      <div id="signals" class="signal-grid"></div>
+
+      <textarea
+        id="notes"
+        placeholder="Notes (ex: cosas raras)"
+      ></textarea>
+      <div class="inline-controls">
+        <label for="operator">Operator:</label>
+        <select id="operator">
+          <option>Test</option>
+          <option>Ricardo A</option>
+          <option>Miguel</option>
+          <option>Benjamin</option>
+          <option>Jose Leo</option>
+          <option>Kevin U</option>
+          <option>David</option>
+          <option>Jay R</option>
+          <option>Other</option>
+        </select>
+        <button class="export" onclick="submitChecks()">Submit Logs</button>
+        <button
+          class="exportdocument"
+          onclick="window.open('https://docs.google.com/spreadsheets/d/1f84Gosr3AqZj2jr9wFL2RNvCu-utzYybUUUbXWuu6kY/edit?usp=sharing', '_blank', 'noopener,noreferrer');"
+        >
+          Signal Log Document
+        </button>
+        <button class="exportdocument" onclick="submitError()">
+          Report Error
+        </button>
+
+      
+        <span id="testingElements">
+        <button class="testingButton" onclick="updateTestTime()">
+          Test Time left
+        </button>
+        <textarea id="testtime" placeholder="3">.03</textarea>
+      </span>
+        
+      </div>
+
+      <hr />
+
+      <div id="statusMsg"></div>
+    </div>
+
+    <script>
+
+  document.getElementById("testingElements").style.display = "none";
+  
+
+
+let testing = false;
+
+function showTestElements () {
+  document.getElementById("testingElements").style.display = "";
+    console.log(document.getElementById("testingElements").style.display);
+
+}
+
+if (testing) {
+  showTestElements ();
+}
+      
+      // =====================
+      // CONFIG
+      // =====================
+      const checkIntervalMinutes = 30; //interval check in minutes - Should be 30
+
+      // =====================
+      // INTERVAL TRACKING
+      // =====================
+      function getIntervalId(date = new Date()) {
+        const day = date.toISOString().slice(0, 10); // YYYY-MM-DD
+        const hour = date.getHours();
+        const interval = Math.floor(date.getMinutes() / checkIntervalMinutes);
+        return `${day}-${hour}-${interval}`;
+      }
+
+      let lastCheckedIntervalId = localStorage.getItem("lastCheckedIntervalId");
+
+
+      // =====================
+      // COUNTDOWN
+      // =====================
+      let remainingSeconds = 0;
+      let signalCheckMissed = false;
+      let checkedForInterval = false; //maybe set it to true
+
+      function updateTestTime() {
+        console.log(remainingSeconds);
+        remainingSeconds = document.getElementById("testtime").value * 60;
+        console.log(remainingSeconds);
+      }
+
+      const countdownEl = document.getElementById("countdown");
+      const warningBoxEl = document.getElementById("warningBox");
+
+      function initializeCountdown() {
+        const now = new Date();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+
+        let nextIntervalMinute =
+          (Math.floor(minutes / checkIntervalMinutes) + 1) *
+          checkIntervalMinutes;
+
+        if (nextIntervalMinute >= 60) nextIntervalMinute = 0;
+
+        let minutesUntil = nextIntervalMinute - minutes - 1;
+        let secondsUntil = 60 - seconds;
+
+        if (minutesUntil < 0) minutesUntil += 60;
+
+        remainingSeconds = minutesUntil * 60 + secondsUntil;
+
+        console.log(remainingSeconds);
+      }
+
+      function updateCountdown() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+
+        countdownEl.textContent = `Next check in ${minutes}:${seconds
+          .toString()
+          .padStart(2, "0")}`;
+
+        if (signalCheckMissed) {
+          //countdownEl.textContent =    "⚠ SIGNAL CHECK MISSED ⚠";
+
+
+
+          let totalMissed = 30 * 60 - remainingSeconds;
+          let minutesm = Math.floor(totalMissed / 60);
+          let secondsm = totalMissed % 60;
+
+          countdownEl.textContent = `Missed by ${minutesm}:${secondsm
+            .toString()
+            .padStart(2, "0")}`;
+        }
+
+        if (
+          remainingSeconds <= 300 &&
+          remainingSeconds > 0 &&
+          !checkedForInterval
+        ) {
+          warningBoxEl.textContent = "⚠ SIGNAL CHECK NOW ⚠";
+          warningBoxEl.classList.add("yellow");
+        }
+
+        if (remainingSeconds <= 0) {
+          const currentIntervalId = getIntervalId();
+
+          if (!checkedForInterval) {
+            signalCheckMissed = true;
+          }
+
+          countdownEl.style.display = "";
+
+          //if (lastCheckedIntervalId !== currentIntervalId)
+
+          if (signalCheckMissed) {
+            countdownEl.textContent = "⚠ SIGNAL CHECK MISSED ⚠";
+            countdownEl.classList.add("alert");
+            warningBoxEl.textContent = "⚠ SIGNAL CHECK OVERDUE ⚠";
+            warningBoxEl.classList.add("show");
+            console.log("warningbox on");
+     // optional beep
+      new Audio(
+         "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        ).play();
+
+
+          } else {
+            countdownEl.textContent = "✔ Interval completed";
+            countdownEl.classList.remove("alert");
+            warningBoxEl.classList.remove("show");
+            warningBoxEl.classList.remove("yellow");
+
+            console.log("warningbox off");
+          }
+
+          checkedForInterval = false;
+          initializeCountdown();
+          return;
+        }
+        // console.log("4remainig seconds", remainingSeconds);
+        //  console.log("4TcheckedForInterval ", checkedForInterval);
+        //  console.log("4TsignalCheckMissed", signalCheckMissed);
+
+        remainingSeconds--;
+      }
+
+      // =====================
+      // CLOCK
+      // =====================
+      function updateClock() {
+        document.getElementById("timeDisplay").innerText =
+          "Current Time: " + new Date().toLocaleString();
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      //let midnight = [0, 0, 0];
+      //if( timeToSeconds( nextCheckTime) ===  timeToSeconds(midnight)){
+      //console.log("it's midnight")
+      //nextCheckTime = [24, 0, 0]
+      //}
+
+      let logs = JSON.parse(localStorage.getItem("signalLogs") || "[]");
+
+      // =========================
+      // Logging
+      // =========================
+
+      function submitChecks() {
+        const operator = document.getElementById("operator").value;
+
+        if (!operator) {
+          alert("Please select operator.");
+          return;
+        }
+
+        const now = new Date();
+        const entry = {
+          date: now.toLocaleDateString(),
+          time: now.toLocaleTimeString(),
+          operator: operator,
+          notes: document.getElementById("notes").value,
+        };
+
+        signalList.forEach((sigObj) => {
+          const mainId = sigObj.name.replace(/\s/g, "_");
+          entry[sigObj.name] = document.getElementById(mainId).checked;
+
+          if (sigObj.subChecks) {
+            sigObj.subChecks.forEach((sub) => {
+              const subId = `${mainId}_${sub.replace(/\s/g, "_")}`;
+              entry[`${sigObj.name} ${sub}`] =
+                document.getElementById(subId).checked;
+            });
+          }
+        });
+
+        logs.push(entry);
+        localStorage.setItem("signalLogs", JSON.stringify(logs));
+
+        sendToSheets(entry, "Log");
+        console.log(entry);
+
+        clearAllChecks();
+        updateTimerAndWarnings();
+        initializeCountdown();
+      }
+
+      function updateTimerAndWarnings() {
+        countdownEl.style.display = "none";
+
+
+        console.log("checked for interval = ", checkedForInterval);
+
+        if (!checkedForInterval) {
+          countdownEl.style.display = "";
+          countdownEl.classList.remove("alert");
+          warningBoxEl.classList.remove("yellow");
+        }
+
+        checkedForInterval = true;
+        signalCheckMissed = false;
+
+        warningBoxEl.classList.remove("show");
+
+       
+
+        const currentIntervalId = getIntervalId();
+        lastCheckedIntervalId = currentIntervalId;
+        localStorage.setItem("lastCheckedIntervalId", currentIntervalId);
+
+        console.log("lastCheckedIntervalId = ", lastCheckedIntervalId);
+        console.log("currentIntervalId = ", currentIntervalId);
+
+        signalCheckMissed = false;
+      }
+
+      function clearAllChecks() {
+        signalList.forEach((sigObj) => {
+          const mainId = sigObj.name.replace(/\s/g, "_");
+          document.getElementById(mainId).checked = false;
+
+          if (sigObj.subChecks) {
+            sigObj.subChecks.forEach((sub) => {
+              const subId = `${mainId}_${sub.replace(/\s/g, "_")}`;
+              document.getElementById(subId).checked = false;
+            });
+          }
+        });
+
+        const notesBox = document.getElementById("notes");
+        notesBox.classList.remove("redNotesBox");
+        notesBox.value = "";
+        notesBox.placeholder = "Notes"
+
+
+      }
+
+      const signalList = [
+        { name: "RX SPECTRUM", subChecks: ["CC"] },
+        { name: "RX KDOC", subChecks: ["CC"] },
+        { name: "RX DIRECTV", subChecks: ["CC"] },
+        { name: "RX SAT" },
+        { name: "RX DISH NETWORK", subChecks: ["CC"] },
+        { name: "TX SPECTRUM" },
+        { name: "TX DIRECTV" },
+        { name: "TX DISH NETWORK" },
+        { name: "TX VEGAS PHOENIX" },
+        { name: "TX COMCAST" },
+        { name: "TX KDOC" },
+        { name: "TX SAT" },
+        { name: "TX PRIMARY STREA" },
+        { name: "TX BACK-UP STREA" },
+        { name: "TX WEB APPS" },
+      ];
+
+      function renderSignals() {
+        const container = document.getElementById("signals");
+        container.innerHTML = "";
+
+        signalList.forEach((sigObj) => {
+          const mainId = sigObj.name.replace(/\s/g, "_");
+
+          let html = `
+<div class="signal-item">
+<label>
+<input type="checkbox" id="${mainId}">
+${sigObj.name}
+</label>
+`;
+
+          // Add sub checks (like CC)
+          if (sigObj.subChecks) {
+            sigObj.subChecks.forEach((sub) => {
+              const subId = `${mainId}_${sub.replace(/\s/g, "_")}`;
+
+              html += `
+<div style="margin-left:20px; margin-top:5px;">
+<label>
+<input type="checkbox" id="${subId}">
+${sub}
+</label>
+</div>
+`;
+            });
+          }
+
+          html += `</div>`;
+
+          container.innerHTML += html;
+        });
+      }
+
+      function checkAllSignals() {
+        signalList.forEach((sigObj) => {
+          const mainId = sigObj.name.replace(/\s/g, "_");
+          document.getElementById(mainId).checked = true;
+
+          if (sigObj.subChecks) {
+            sigObj.subChecks.forEach((sub) => {
+              const subId = `${mainId}_${sub.replace(/\s/g, "_")}`;
+              document.getElementById(subId).checked = true;
+            });
+          }
+        });
+      }
+
+      renderSignals();
+      // =========================
+      // Report Error
+      // =========================
+
+      function submitError() {
+        const operator = document.getElementById("operator").value;
+
+        if (!operator) {
+          alert("Please select operator.");
+          return;
+        }
+
+        const userNotes = document.getElementById("notes").value;
+        const notesBox = document.getElementById("notes");
+        console.log("userNotes");
+
+        if (!userNotes) {
+          //alert("Please add notes.");
+          notesBox.placeholder = "-- Por favor escriba cual es el error --"
+          notesBox.classList.add("redNotesBox");
+          return;
+        }
+
+        const now = new Date();
+        const entry = {
+          date: now.toLocaleDateString(),
+          time: now.toLocaleTimeString(),
+          operator: operator,
+          notes: "Error note: " + userNotes,
+        };
+
+        logs.push(entry);
+        localStorage.setItem("signalLogs", JSON.stringify(logs));
+
+        sendToSheets(entry, "Error");
+        console.log(entry);
+
+        notesBox.classList.remove("redNotesBox");
+        console.log("Report Sent");
+
+        document.getElementById("notes").value = "";
+        notesBox.placeholder = "Notes "
+
+
+      }
+
+      // =========================
+      // Google Sheets POST
+      // Requires Apps Script endpoint
+      // =========================
+      async function sendToSheets(entry, sentStatus = "Something") {
+        const endpoint =
+          "https://script.google.com/macros/s/AKfycbx1f3dIyJrWjQSU5RVFZz7ja7wFz0IxivrLzAD2YxJ-LRInoryp08zqIqVlikHujLl_VA/exec";
+
+        console.log("async function activated");
+        //counting = false;
+
+        try {
+          await fetch(endpoint, {
+            method: "POST",
+            body: JSON.stringify(entry),
+            mode: "no-cors",
+          });
+
+          const sentAt = entry.timestamp
+            ? new Date(entry.timestamp)
+            : new Date();
+          status(`${sentStatus} sent to Sheets at ${sentAt.toLocaleString()}`);
+        } catch (e) {
+          console.error(e);
+          status("Sheets send failed.");
+        }
+      }
+
+      function status(msg) {
+        document.getElementById("statusMsg").innerText = msg;
+      }
+
+      // =====================
+      // ACTIONS
+      // =====================
+      initializeCountdown();
+      setInterval(updateCountdown, 1000);
+
+     const lastCheckB = document.getElementById("lastCheckBox");
+//lastCheckB.textContent = "Last Check = ", xxx, " || "
+lastCheckB.textContent = ""
+
+
+    </script>
+  </body>
+</html>
