@@ -175,6 +175,12 @@
          #tallyBox {
           text-align: left; 
          }
+
+#lunchBox {
+    background: #F28C28;
+   color: white;
+}
+
     </style>
   </head>
 
@@ -198,7 +204,8 @@
       <p style="text-align: left">
         <button class="all-btn" onclick="checkAllSignals()">
           ✅ Check All Signals
-        </button>
+        </button> 
+<button id="lunchBox"  onclick="lunchTime()">Lunch Time </button>
         
       </p>
 
@@ -207,7 +214,8 @@
       <textarea
         id="notes"
         placeholder="Notes (ex: cosas raras)"
-      ></textarea>
+      >
+</textarea>
       <div class="inline-controls">
         <label for="operator">Operator:</label>
         <select id="operator">
@@ -286,6 +294,13 @@ console.log(tallyRecord);
         const day = date.toISOString().slice(0, 10); // YYYY-MM-DD
         const hour = date.getHours();
         const interval = Math.floor(date.getMinutes() / checkIntervalMinutes);
+
+if(hour === 1 || hour === 10 || hour === 5) {
+document.getElementById('lunchBox').style.display = "";
+
+}
+console.log("this is the hour in the interval ID" + hour)
+
         return `${day}-${hour}-${interval}`;
       }
 
@@ -304,6 +319,13 @@ console.log(tallyRecord);
         console.log(remainingSeconds);
         remainingSeconds = document.getElementById("testtime").value * 60;
         console.log(remainingSeconds);
+      }
+
+      function lunchTime() {
+        console.log(remainingSeconds);
+        remainingSeconds = remainingSeconds + 30*60;
+        console.log(remainingSeconds);
+document.getElementById('lunchBox').style.display = "none";
       }
 
       const countdownEl = document.getElementById("countdown");
@@ -340,7 +362,7 @@ console.log(tallyRecord);
           .padStart(2, "0")}`;
 
           // So the timer can turn at 25 minutes
-if (minutes <= 25 && minutes > 20) {
+if (minutes === 24) {
 
            //option A
           //Option B
@@ -348,10 +370,17 @@ if (minutes <= 25 && minutes > 20) {
           
        
          if (!checkedForInterval) {
-          countdownEl.style.display = ""; 
+          
          
-            alarm = false;
+            //alarm = false;
           }  
+
+//everything gets reset at min 25
+alarm = false;
+countdownEl.style.display = ""; 
+checkForInterval = false;
+signalCheckMissed = false;
+
              
 }
 
@@ -408,6 +437,8 @@ if (minutes <= 25 && minutes > 20) {
 
           checkedForInterval = false;
           initializeCountdown();
+
+document.getElementById('lunchBox').style.display = "";
           return;
         }
         // console.log("4remainig seconds", remainingSeconds);
