@@ -35,10 +35,9 @@ console.log(tallyRecord);
         const hour = date.getHours();
         const interval = Math.floor(date.getMinutes() / checkIntervalMinutes);
 
-/* if(hour === 1 || hour === 10 || hour === 5) {
-document.getElementById('lunchBox').style.display = "";
-} */
-
+if(hour === 1 || hour === 10 || hour === 5) {
+//document.getElementById('lunchBox').style.display = "";
+}
 console.log("this is the hour in the interval ID" + hour)
 
         return `${day}-${hour}-${interval}`;
@@ -61,13 +60,13 @@ console.log("this is the hour in the interval ID" + hour)
         console.log(remainingSeconds);
       }
 
-/*       function lunchTime() {
+      function lunchTime() {
         console.log(remainingSeconds);
         remainingSeconds = remainingSeconds + 30*60;
         console.log(remainingSeconds);
-document.getElementById('lunchBox').style.display = "none";
+//document.getElementById('lunchBox').style.display = "none";
       }
- */
+
       const countdownEl = document.getElementById("countdown");
       const warningBoxEl = document.getElementById("warningBox");
 
