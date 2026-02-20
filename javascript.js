@@ -36,7 +36,7 @@ console.log(tallyRecord);
         const interval = Math.floor(date.getMinutes() / checkIntervalMinutes);
 
 if(hour === 1 || hour === 10 || hour === 5) {
-//document.getElementById('lunchBox').style.display = "";
+document.getElementById('lunchBox').style.display = "";
 }
 console.log("this is the hour in the interval ID" + hour)
 
@@ -64,7 +64,7 @@ console.log("this is the hour in the interval ID" + hour)
         console.log(remainingSeconds);
         remainingSeconds = remainingSeconds + 30*60;
         console.log(remainingSeconds);
-//document.getElementById('lunchBox').style.display = "none";
+document.getElementById('lunchBox').style.display = "none";
       }
 
       const countdownEl = document.getElementById("countdown");
@@ -117,7 +117,7 @@ if (minutes === 24) {
 //everything gets reset at min 25
 alarm = false;
 countdownEl.style.display = ""; 
-checkForInterval = false;
+checkedForInterval = false;
 signalCheckMissed = false;
 
              
@@ -177,7 +177,7 @@ signalCheckMissed = false;
           checkedForInterval = false;
           initializeCountdown();
 
-//document.getElementById('lunchBox').style.display = "";
+document.getElementById('lunchBox').style.display = "";
           return;
         }
         // console.log("4remainig seconds", remainingSeconds);
