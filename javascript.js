@@ -1,3 +1,4 @@
+
 document.getElementById("testingElements").style.display = "none";
   
 
@@ -471,9 +472,15 @@ lastCheckB.textContent = " --- Last Check at " +  lastCheck.toLocaleString([], {
               function updateRecord() {
                 
 
-                document.getElementById("tallyBox").innerText = `Current tally ${tallyRecord} successful logs`;
-                
+                document.getElementById("tallyBox").innerText =
+    `Monitoring Streak: ${tallyRecord} consecutive logs.`;
 
+    //document.getElementById("integrityLabel").innerText =   `Signal Integrity: ${tallyRecord}`;
+
+  const maxWidth = 100; 
+  const growth = Math.min(tallyRecord * 10, maxWidth);
+
+  document.getElementById("integrityFill").style.width = growth + "%";
         localStorage.setItem("storedTallyRecord", tallyRecord);
 
           }
